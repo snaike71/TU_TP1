@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "docs": "jsdoc -c jsdoc.json"
+    "test:coverage": "jest --coverage",
+    "jsdoc": "jsdoc -c ./jsdoc.config.json -r -d ./docs"
   },
   "repository": {
     "type": "git",
