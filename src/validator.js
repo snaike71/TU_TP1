@@ -53,4 +53,28 @@ function validateAge(birthDate) {
     return { valid: true };
 }
 
-module.exports = { validateAge };
+/**
+ * Valide un code postal français
+ * @param {string|number} postalCode - Code postal à valider
+ * @returns {ValidationResult} Résultat de la validation
+ */
+function validatePostalCode(postalCode) {
+    if (postalCode === null || postalCode === undefined) {
+        return { valid: false, error: 'INVALID_INPUT' };
+    }
+
+    if (typeof postalCode === 'object') {
+        return { valid: false, error: 'INVALID_INPUT' };
+    }
+
+    const codeStr = String(postalCode);
+    const regex = /^\d{5}$/;
+
+    if (!regex.test(codeStr)) {
+        return { valid: false, error: 'INVALID_POSTAL_CODE_FORMAT' };
+    }
+
+    return { valid: true };
+}
+
+module.exports = { validateAge, validatePostalCode };
