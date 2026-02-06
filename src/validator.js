@@ -77,4 +77,39 @@ function validatePostalCode(postalCode) {
     return { valid: true };
 }
 
-module.exports = { validateAge, validatePostalCode };
+/**
+ * Valide une identité (nom ou prénom)
+ * @param {string} name - Nom ou prénom à valider
+ * @returns {ValidationResult} Résultat de la validation
+ */
+function validateIdentity(name) {
+    if (name === null || name === undefined) {
+        return { valid: false, error: 'INVALID_INPUT' };
+    }
+
+    if (typeof name !== 'string') {
+        return { valid: false, error: 'INVALID_INPUT' };
+    }
+
+    const xssPatterns = [
+        /<[^>]*>/i,
+        /javascript:/i,
+        /on\w+\s*=/i
+    ];
+
+    for (const pattern of xssPatterns) {
+        if (pattern.test(name)) {
+            return { valid: false, error: 'XSS_DETECTED' };
+        }
+    }
+
+    const validNameRegex = /^[a-zA-ZÀ-ÿ][a-zA-ZÀ-ÿ\s'\-]*$/;
+
+    if (!validNameRegex.test(name)) {
+        return { valid: false, error: 'INVALID_IDENTITY_FORMAT' };
+    }
+
+    return { valid: true };
+}
+
+module.exports = { validateAge, validatePostalCode, validateIdentity };
