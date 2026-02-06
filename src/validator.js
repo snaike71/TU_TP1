@@ -112,4 +112,27 @@ function validateIdentity(name) {
     return { valid: true };
 }
 
-module.exports = { validateAge, validatePostalCode, validateIdentity };
+/**
+ * Valide une adresse email
+ * @param {string} email - Adresse email à valider
+ * @returns {ValidationResult} Résultat de la validation
+ */
+function validateEmail(email) {
+    if (email === null || email === undefined) {
+        return { valid: false, error: 'INVALID_INPUT' };
+    }
+
+    if (typeof email !== 'string') {
+        return { valid: false, error: 'INVALID_INPUT' };
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!emailRegex.test(email)) {
+        return { valid: false, error: 'INVALID_EMAIL_FORMAT' };
+    }
+
+    return { valid: true };
+}
+
+module.exports = { validateAge, validatePostalCode, validateIdentity, validateEmail };
