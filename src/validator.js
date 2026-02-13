@@ -168,4 +168,8 @@ function validateUser(user) {
     return true;
 }
 
-module.exports = { validateAge, validatePostalCode, validateIdentity, validateEmail, validateUser };
+export { validateAge, validatePostalCode, validateIdentity, validateEmail, validateUser };
+
+if (typeof module !== 'undefined') {
+    module.exports = { validateAge, validatePostalCode, validateIdentity, validateEmail, validateUser };
+}
