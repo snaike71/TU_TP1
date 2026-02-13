@@ -1,4 +1,6 @@
 import React, { useState, useCallback } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { validateAge, validatePostalCode, validateIdentity, validateEmail } from '../validator';
 
 const ERROR_MESSAGES = {
@@ -23,7 +25,6 @@ function UserForm() {
 
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
-    const [successMessage, setSuccessMessage] = useState('');
 
     const validateField = useCallback((field, value) => {
         let result;
@@ -107,7 +108,7 @@ function UserForm() {
         if (!isFormValid()) return;
 
         localStorage.setItem('user', JSON.stringify(formData));
-        setSuccessMessage('Inscription réussie avec succès !');
+        toast.success('Inscription réussie avec succès !');
         setFormData({ name: '', firstName: '', email: '', birthDate: '', postalCode: '', city: '' });
         setErrors({});
         setTouched({});
@@ -195,7 +196,7 @@ function UserForm() {
 
             <button type="submit" disabled={!isFormValid()}>Soumettre</button>
 
-            {successMessage && <div className="success" role="status">{successMessage}</div>}
+            <ToastContainer />
         </form>
     );
 }
