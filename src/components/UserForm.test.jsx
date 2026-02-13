@@ -16,12 +16,12 @@ describe('UserForm - Tests d\'intégration', () => {
     describe('Rendu initial', () => {
         test('doit afficher tous les champs du formulaire', () => {
             render(<UserForm />);
-            expect(screen.getByLabelText(/nom/i)).toBeInTheDocument();
-            expect(screen.getByLabelText(/prénom/i)).toBeInTheDocument();
-            expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-            expect(screen.getByLabelText(/date de naissance/i)).toBeInTheDocument();
-            expect(screen.getByLabelText(/code postal/i)).toBeInTheDocument();
-            expect(screen.getByLabelText(/ville/i)).toBeInTheDocument();
+            expect(screen.getByLabelText('Nom')).toBeInTheDocument();
+            expect(screen.getByLabelText('Prénom')).toBeInTheDocument();
+            expect(screen.getByLabelText('Email')).toBeInTheDocument();
+            expect(screen.getByLabelText('Date de naissance')).toBeInTheDocument();
+            expect(screen.getByLabelText('Code postal')).toBeInTheDocument();
+            expect(screen.getByLabelText('Ville')).toBeInTheDocument();
         });
 
         test('le bouton de soumission doit être désactivé au départ', () => {
@@ -34,7 +34,7 @@ describe('UserForm - Tests d\'intégration', () => {
     describe('Feedback immédiat - erreurs de validation', () => {
         test('doit afficher une erreur si le nom contient des chiffres', async () => {
             render(<UserForm />);
-            const nomInput = screen.getByLabelText(/nom/i);
+            const nomInput = screen.getByLabelText('Nom');
             await user.type(nomInput, 'Dupont123');
             await user.tab();
             expect(screen.getByText(/nom invalide/i)).toBeInTheDocument();
@@ -42,7 +42,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
         test('doit afficher une erreur si le prénom contient du HTML (XSS)', async () => {
             render(<UserForm />);
-            const prenomInput = screen.getByLabelText(/prénom/i);
+            const prenomInput = screen.getByLabelText('Prénom');
             await user.type(prenomInput, '<script>');
             await user.tab();
             expect(screen.getByText(/xss/i)).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
         test('doit afficher une erreur si l\'email est invalide', async () => {
             render(<UserForm />);
-            const emailInput = screen.getByLabelText(/email/i);
+            const emailInput = screen.getByLabelText('Email');
             await user.type(emailInput, 'invalid-email');
             await user.tab();
             expect(screen.getByText(/email invalide/i)).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
         test('doit afficher une erreur si le code postal est invalide', async () => {
             render(<UserForm />);
-            const cpInput = screen.getByLabelText(/code postal/i);
+            const cpInput = screen.getByLabelText('Code postal');
             await user.type(cpInput, '123');
             await user.tab();
             expect(screen.getByText(/code postal invalide/i)).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
         test('doit afficher une erreur si l\'utilisateur est mineur', async () => {
             render(<UserForm />);
-            const dateInput = screen.getByLabelText(/date de naissance/i);
+            const dateInput = screen.getByLabelText('Date de naissance');
             await user.type(dateInput, '2020-01-01');
             await user.tab();
             expect(screen.getByText(/mineur/i)).toBeInTheDocument();
@@ -74,7 +74,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
         test('doit supprimer l\'erreur quand la valeur devient valide', async () => {
             render(<UserForm />);
-            const nomInput = screen.getByLabelText(/nom/i);
+            const nomInput = screen.getByLabelText('Nom');
             await user.type(nomInput, '123');
             await user.tab();
             expect(screen.getByText(/nom invalide/i)).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe('UserForm - Tests d\'intégration', () => {
     describe('Sécurité UI - bouton désactivé/activé', () => {
         test('le bouton reste désactivé si un champ est invalide', async () => {
             render(<UserForm />);
-            const nomInput = screen.getByLabelText(/nom/i);
+            const nomInput = screen.getByLabelText('Nom');
             await user.type(nomInput, 'Dupont');
             const button = screen.getByRole('button', { name: /soumettre/i });
             expect(button).toBeDisabled();
@@ -106,9 +106,9 @@ describe('UserForm - Tests d\'intégration', () => {
         test('saisies invalides, corrections, re-saisies', async () => {
             render(<UserForm />);
 
-            const nomInput = screen.getByLabelText(/nom/i);
-            const prenomInput = screen.getByLabelText(/prénom/i);
-            const emailInput = screen.getByLabelText(/email/i);
+            const nomInput = screen.getByLabelText('Nom');
+            const prenomInput = screen.getByLabelText('Prénom');
+            const emailInput = screen.getByLabelText('Email');
 
             await user.type(nomInput, '123Invalid');
             await user.tab();
@@ -169,11 +169,11 @@ describe('UserForm - Tests d\'intégration', () => {
             const button = screen.getByRole('button', { name: /soumettre/i });
             await user.click(button);
 
-            expect(screen.getByLabelText(/nom/i)).toHaveValue('');
-            expect(screen.getByLabelText(/prénom/i)).toHaveValue('');
-            expect(screen.getByLabelText(/email/i)).toHaveValue('');
-            expect(screen.getByLabelText(/code postal/i)).toHaveValue('');
-            expect(screen.getByLabelText(/ville/i)).toHaveValue('');
+            expect(screen.getByLabelText('Nom')).toHaveValue('');
+            expect(screen.getByLabelText('Prénom')).toHaveValue('');
+            expect(screen.getByLabelText('Email')).toHaveValue('');
+            expect(screen.getByLabelText('Code postal')).toHaveValue('');
+            expect(screen.getByLabelText('Ville')).toHaveValue('');
         });
 
         test('doit afficher un message de succès (toaster)', async () => {
@@ -201,10 +201,10 @@ describe('UserForm - Tests d\'intégration', () => {
 });
 
 async function fillValidForm(user) {
-    await user.type(screen.getByLabelText(/nom/i), 'Dupont');
-    await user.type(screen.getByLabelText(/prénom/i), 'Jean');
-    await user.type(screen.getByLabelText(/email/i), 'jean@example.com');
-    await user.type(screen.getByLabelText(/date de naissance/i), '1990-05-15');
-    await user.type(screen.getByLabelText(/code postal/i), '75001');
-    await user.type(screen.getByLabelText(/ville/i), 'Paris');
+    await user.type(screen.getByLabelText('Nom'), 'Dupont');
+    await user.type(screen.getByLabelText('Prénom'), 'Jean');
+    await user.type(screen.getByLabelText('Email'), 'jean@example.com');
+    await user.type(screen.getByLabelText('Date de naissance'), '1990-05-15');
+    await user.type(screen.getByLabelText('Code postal'), '75001');
+    await user.type(screen.getByLabelText('Ville'), 'Paris');
 }

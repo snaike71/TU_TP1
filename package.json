@@ -35,8 +35,7 @@
     "testEnvironment": "jsdom",
     "moduleNameMapper": {
       "\\.(css)$": "identity-obj-proxy"
-    },
-    "setupFilesAfterSetup": []
+    }
   },
   "dependencies": {
     "react": "^19.2.4",
