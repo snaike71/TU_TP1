@@ -85,6 +85,38 @@ describe('UserForm - Tests d\'intégration', () => {
         });
     });
 
+    describe('Feedback immédiat - ville', () => {
+        test('doit garder le bouton désactivé si la ville est vide', async () => {
+            render(<UserForm />);
+            await user.type(screen.getByLabelText('Nom'), 'Dupont');
+            await user.type(screen.getByLabelText('Prénom'), 'Jean');
+            await user.type(screen.getByLabelText('Email'), 'jean@example.com');
+            await user.type(screen.getByLabelText('Date de naissance'), '1990-05-15');
+            await user.type(screen.getByLabelText('Code postal'), '75001');
+            const button = screen.getByRole('button', { name: /soumettre/i });
+            expect(button).toBeDisabled();
+        });
+
+        test('le bouton devient actif quand la ville est remplie', async () => {
+            render(<UserForm />);
+            await fillValidForm(user);
+            const button = screen.getByRole('button', { name: /soumettre/i });
+            expect(button).not.toBeDisabled();
+        });
+
+        test('doit revalider la ville quand on la vide après saisie', async () => {
+            render(<UserForm />);
+            const villeInput = screen.getByLabelText('Ville');
+            await user.type(villeInput, 'Paris');
+            await user.tab();
+            await user.clear(villeInput);
+            await user.type(villeInput, ' ');
+            await user.tab();
+            const button = screen.getByRole('button', { name: /soumettre/i });
+            expect(button).toBeDisabled();
+        });
+    });
+
     describe('Sécurité UI - bouton désactivé/activé', () => {
         test('le bouton reste désactivé si un champ est invalide', async () => {
             render(<UserForm />);

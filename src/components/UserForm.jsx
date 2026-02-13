@@ -48,8 +48,6 @@ function UserForm() {
                     result = { valid: true };
                 }
                 break;
-            default:
-                result = { valid: true };
         }
         return result;
     }, []);
@@ -75,31 +73,29 @@ function UserForm() {
         const { name, value } = e.target;
         setTouched(prev => ({ ...prev, [name]: true }));
 
-        if (!value || value.trim() === '') {
+        if (value && value.trim() !== '') {
+            const result = validateField(name, value);
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                if (result.valid) {
+                    delete newErrors[name];
+                } else {
+                    newErrors[name] = ERROR_MESSAGES[result.error] || result.error;
+                }
+                return newErrors;
+            });
+        } else {
             setErrors(prev => {
                 const newErrors = { ...prev };
                 delete newErrors[name];
                 return newErrors;
             });
-            return;
         }
-
-        const result = validateField(name, value);
-        setErrors(prev => {
-            const newErrors = { ...prev };
-            if (result.valid) {
-                delete newErrors[name];
-            } else {
-                newErrors[name] = ERROR_MESSAGES[result.error] || result.error;
-            }
-            return newErrors;
-        });
     };
 
     const isFormValid = () => {
         const fields = ['name', 'firstName', 'email', 'birthDate', 'postalCode', 'city'];
         for (const field of fields) {
-            if (!formData[field]) return false;
             const result = validateField(field, formData[field]);
             if (!result.valid) return false;
         }
