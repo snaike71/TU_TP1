@@ -135,4 +135,37 @@ function validateEmail(email) {
     return { valid: true };
 }
 
-module.exports = { validateAge, validatePostalCode, validateIdentity, validateEmail };
+/**
+ * Valide un utilisateur complet
+ * @param {Object} user - Objet utilisateur
+ * @param {Date|string} user.birthDate - Date de naissance
+ * @param {string|number} user.postalCode - Code postal
+ * @param {string} user.name - Nom
+ * @param {string} user.firstName - Prénom
+ * @param {string} user.email - Adresse email
+ * @returns {boolean} true si toutes les validations passent, false sinon
+ */
+function validateUser(user) {
+    if (!user || typeof user !== 'object') {
+        return false;
+    }
+
+    const ageResult = validateAge(user.birthDate);
+    if (!ageResult.valid) return false;
+
+    const postalCodeResult = validatePostalCode(user.postalCode);
+    if (!postalCodeResult.valid) return false;
+
+    const nameResult = validateIdentity(user.name);
+    if (!nameResult.valid) return false;
+
+    const firstNameResult = validateIdentity(user.firstName);
+    if (!firstNameResult.valid) return false;
+
+    const emailResult = validateEmail(user.email);
+    if (!emailResult.valid) return false;
+
+    return true;
+}
+
+module.exports = { validateAge, validatePostalCode, validateIdentity, validateEmail, validateUser };

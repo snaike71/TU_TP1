@@ -11,9 +11,9 @@ npm install
 ## Scripts disponibles
 
 ```bash
-npm test              # Lancer les tests
-npm run test:coverage # Lancer les tests avec couverture
-npm run jsdoc         # Générer la documentation
+npm test
+npm run test:coverage
+npm run jsdoc    
 ```
 
 ## Voir la documentation
@@ -29,9 +29,3 @@ npm run test:coverage
 start coverage/lcov-report/index.html
 ```
 
-## Fonctions disponibles
-
-- `validateAge(birthDate)` - Valide l'âge (>= 18 ans)
-- `validatePostalCode(postalCode)` - Valide un code postal français (5 chiffres)
-- `validateIdentity(name)` - Valide un nom/prénom (protection XSS)
-- `validateEmail(email)` - Valide une adresse email
