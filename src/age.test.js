@@ -86,5 +86,17 @@ describe('validateAge', () => {
             expect(result.valid).toBe(false);
             expect(result.error).toBe('INVALID_DATE_FUTURE');
         });
+
+        test('doit retourner une erreur pour une année irréaliste (ex: 0008)', () => {
+            const result = validateAge('0008-06-15');
+            expect(result.valid).toBe(false);
+            expect(result.error).toBe('INVALID_DATE_TOO_OLD');
+        });
+
+        test('doit retourner une erreur pour une date antérieure à 1900', () => {
+            const result = validateAge(new Date(1899, 11, 31));
+            expect(result.valid).toBe(false);
+            expect(result.error).toBe('INVALID_DATE_TOO_OLD');
+        });
     });
 });

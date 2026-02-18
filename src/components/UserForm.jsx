@@ -3,16 +3,29 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { validateAge, validatePostalCode, validateIdentity, validateEmail } from '../validator';
 
+/**
+ * @constant {Object.<string, string>} ERROR_MESSAGES
+ * @description Mapping des codes d'erreur de validation vers les messages utilisateur affichés dans le formulaire.
+ */
 const ERROR_MESSAGES = {
     INVALID_INPUT: 'Champ requis',
     AGE_UNDER_18: 'Vous devez être majeur (mineur détecté)',
     INVALID_DATE_FUTURE: 'La date ne peut pas être dans le futur',
+    INVALID_DATE_TOO_OLD: 'La date de naissance est invalide',
     INVALID_POSTAL_CODE_FORMAT: 'Code postal invalide (5 chiffres attendus)',
     INVALID_IDENTITY_FORMAT: 'Nom invalide (lettres, accents et tirets uniquement)',
     XSS_DETECTED: 'Contenu XSS détecté',
     INVALID_EMAIL_FORMAT: 'Email invalide'
 };
 
+/**
+ * Composant de formulaire d'inscription utilisateur.
+ * Gère la saisie, la validation en temps réel (onBlur et onChange) et la soumission.
+ * Les données sont sauvegardées dans le localStorage après validation complète.
+ *
+ * @component
+ * @returns {React.JSX.Element} Le formulaire d'inscription avec validation intégrée
+ */
 function UserForm() {
     const [formData, setFormData] = useState({
         name: '',

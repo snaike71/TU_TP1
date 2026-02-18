@@ -32,6 +32,10 @@ function validateAge(birthDate) {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
 
+    if (date.getFullYear() < 1900) {
+        return { valid: false, error: 'INVALID_DATE_TOO_OLD' };
+    }
+
     if (date > today) {
         return { valid: false, error: 'INVALID_DATE_FUTURE' };
     }
@@ -103,7 +107,7 @@ function validateIdentity(name) {
         }
     }
 
-    const validNameRegex = /^[a-zA-ZÀ-ÿ][a-zA-ZÀ-ÿ\s'\-]*$/;
+    const validNameRegex = /^[a-zA-ZÀ-ÿ][a-zA-ZÀ-ÿ\s'-]*$/;
 
     if (!validNameRegex.test(name)) {
         return { valid: false, error: 'INVALID_IDENTITY_FORMAT' };
