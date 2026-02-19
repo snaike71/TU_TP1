@@ -1,7 +1,14 @@
+/**
+ * @fileoverview Composant formulaire d'inscription utilisateur avec validation.
+ * @module UserForm
+ */
+
 import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { validateAge, validatePostalCode, validateIdentity, validateEmail } from '../validator';
+import { useUsers } from '../context/UserContext';
 
 /**
  * @constant {Object.<string, string>} ERROR_MESSAGES
@@ -21,12 +28,15 @@ const ERROR_MESSAGES = {
 /**
  * Composant de formulaire d'inscription utilisateur.
  * Gère la saisie, la validation en temps réel (onBlur et onChange) et la soumission.
- * Les données sont sauvegardées dans le localStorage après validation complète.
+ * Les données sont ajoutées au contexte global et sauvegardées dans le localStorage.
  *
  * @component
  * @returns {React.JSX.Element} Le formulaire d'inscription avec validation intégrée
  */
 function UserForm() {
+    const { addUser } = useUsers();
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         name: '',
         firstName: '',
@@ -120,11 +130,16 @@ function UserForm() {
         e.preventDefault();
         if (!isFormValid()) return;
 
+        addUser(formData);
         localStorage.setItem('user', JSON.stringify(formData));
         toast.success('Inscription réussie avec succès !');
         setFormData({ name: '', firstName: '', email: '', birthDate: '', postalCode: '', city: '' });
         setErrors({});
         setTouched({});
+
+        setTimeout(() => {
+            navigate('/');
+        }, 1500);
     };
 
     return (

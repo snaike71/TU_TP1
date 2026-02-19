@@ -2,7 +2,19 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
+import { UserProvider } from '../context/UserContext';
 import UserForm from './UserForm';
+
+function renderWithProviders(ui) {
+    return render(
+        <MemoryRouter>
+            <UserProvider>
+                {ui}
+            </UserProvider>
+        </MemoryRouter>
+    );
+}
 
 describe('UserForm - Tests d\'intégration', () => {
     let user;
@@ -15,7 +27,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     describe('Rendu initial', () => {
         test('doit afficher tous les champs du formulaire', () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             expect(screen.getByLabelText('Nom')).toBeInTheDocument();
             expect(screen.getByLabelText('Prénom')).toBeInTheDocument();
             expect(screen.getByLabelText('Email')).toBeInTheDocument();
@@ -25,7 +37,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('le bouton de soumission doit être désactivé au départ', () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             const button = screen.getByRole('button', { name: /soumettre/i });
             expect(button).toBeDisabled();
         });
@@ -33,7 +45,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     describe('Feedback immédiat - erreurs de validation', () => {
         test('doit afficher une erreur si le nom contient des chiffres', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             const nomInput = screen.getByLabelText('Nom');
             await user.type(nomInput, 'Dupont123');
             await user.tab();
@@ -41,7 +53,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('doit afficher une erreur si le prénom contient du HTML (XSS)', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             const prenomInput = screen.getByLabelText('Prénom');
             await user.type(prenomInput, '<script>');
             await user.tab();
@@ -49,7 +61,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('doit afficher une erreur si l\'email est invalide', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             const emailInput = screen.getByLabelText('Email');
             await user.type(emailInput, 'invalid-email');
             await user.tab();
@@ -57,7 +69,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('doit afficher une erreur si le code postal est invalide', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             const cpInput = screen.getByLabelText('Code postal');
             await user.type(cpInput, '123');
             await user.tab();
@@ -65,7 +77,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('doit afficher une erreur si l\'utilisateur est mineur', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             const dateInput = screen.getByLabelText('Date de naissance');
             await user.type(dateInput, '2020-01-01');
             await user.tab();
@@ -73,7 +85,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('doit supprimer l\'erreur quand la valeur devient valide', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             const nomInput = screen.getByLabelText('Nom');
             await user.type(nomInput, '123');
             await user.tab();
@@ -87,7 +99,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     describe('Feedback immédiat - ville', () => {
         test('doit garder le bouton désactivé si la ville est vide', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             await user.type(screen.getByLabelText('Nom'), 'Dupont');
             await user.type(screen.getByLabelText('Prénom'), 'Jean');
             await user.type(screen.getByLabelText('Email'), 'jean@example.com');
@@ -98,14 +110,14 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('le bouton devient actif quand la ville est remplie', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             await fillValidForm(user);
             const button = screen.getByRole('button', { name: /soumettre/i });
             expect(button).not.toBeDisabled();
         });
 
         test('doit revalider la ville quand on la vide après saisie', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             const villeInput = screen.getByLabelText('Ville');
             await user.type(villeInput, 'Paris');
             await user.tab();
@@ -119,7 +131,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     describe('Sécurité UI - bouton désactivé/activé', () => {
         test('le bouton reste désactivé si un champ est invalide', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             const nomInput = screen.getByLabelText('Nom');
             await user.type(nomInput, 'Dupont');
             const button = screen.getByRole('button', { name: /soumettre/i });
@@ -127,7 +139,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('le bouton devient actif quand tous les champs sont valides', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             await fillValidForm(user);
             const button = screen.getByRole('button', { name: /soumettre/i });
             expect(button).not.toBeDisabled();
@@ -136,7 +148,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     describe('Scénario utilisateur chaotique', () => {
         test('saisies invalides, corrections, re-saisies', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
 
             const nomInput = screen.getByLabelText('Nom');
             const prenomInput = screen.getByLabelText('Prénom');
@@ -174,7 +186,7 @@ describe('UserForm - Tests d\'intégration', () => {
     describe('Soumission réussie', () => {
         test('doit sauvegarder dans le localStorage avec les bonnes données', async () => {
             const spySetItem = jest.spyOn(Storage.prototype, 'setItem');
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             await fillValidForm(user);
 
             const button = screen.getByRole('button', { name: /soumettre/i });
@@ -195,7 +207,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('doit vider les champs après soumission', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             await fillValidForm(user);
 
             const button = screen.getByRole('button', { name: /soumettre/i });
@@ -209,7 +221,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('doit afficher un message de succès (toaster)', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             await fillValidForm(user);
 
             const button = screen.getByRole('button', { name: /soumettre/i });
@@ -221,7 +233,7 @@ describe('UserForm - Tests d\'intégration', () => {
         });
 
         test('le bouton doit redevenir désactivé après soumission', async () => {
-            render(<UserForm />);
+            renderWithProviders(<UserForm />);
             await fillValidForm(user);
 
             const button = screen.getByRole('button', { name: /soumettre/i });

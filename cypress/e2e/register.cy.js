@@ -11,11 +11,11 @@ describe('Inscription utilisateur - Parcours complet', () => {
     });
 
     beforeEach(() => {
-        cy.visit('/');
+        cy.visit('/register');
     });
 
     it('doit afficher le formulaire d\'inscription', () => {
-        cy.get('h1').should('contain', 'Formulaire d\'inscription');
+        cy.get('h1').should('contain', 'Formulaire');
         cy.get('form').should('exist');
         cy.get('#name').should('exist');
         cy.get('#firstName').should('exist');

@@ -2,7 +2,7 @@
 
 ![Build Passing](https://github.com/snaike71/TU_TP1/actions/workflows/ci.yml/badge.svg)
 
-Module de validation en JavaScript avec tests unitaires (TDD), tests E2E (Cypress) et pipeline CI/CD.
+Application multi-pages React avec formulaire d'inscription, validation, tests unitaires/intégration (Jest), tests E2E (Cypress) et pipeline CI/CD.
 
 ## Installation
 
@@ -23,6 +23,24 @@ npm run build           # Build de production
 npm run jsdoc           # Génération de la documentation JSDoc
 ```
 
+## Architecture
+
+- **`/`** (Accueil) : Message de bienvenue, compteur d'inscrits, liste des utilisateurs
+- **`/register`** (Inscription) : Formulaire avec validation en temps réel
+- **État partagé** : React Context (`UserProvider`) pour le tableau des utilisateurs
+
+## Tests E2E Cypress
+
+```bash
+# Lancer le serveur puis les tests
+npm run dev
+npm run cypress:run
+```
+
+Scénarios couverts :
+- `register.cy.js` : Inscription, validation, erreurs, données anonymisées (Faker.js)
+- `navigation.cy.js` : Parcours multi-pages nominal + scénario d'erreur
+
 ## Pipeline CI/CD
 
 Le workflow GitHub Actions exécute automatiquement :
@@ -30,8 +48,7 @@ Le workflow GitHub Actions exécute automatiquement :
 2. **Linting** (ESLint)
 3. **Tests unitaires** (Jest) avec rapport de couverture
 4. **Tests E2E** (Cypress)
-
-Le pipeline échoue (rouge) si un seul test ne passe pas.
+5. **Déploiement** GitHub Pages (si tests verts)
 
 ## Voir la documentation
 
