@@ -1,7 +1,10 @@
 {
   "source": {
-    "include": ["."],
+    "include": ["src/"],
     "exclude": ["node_modules/", "docs/", "coverage/"],
     "includePattern": ".+\\.(js|jsx)$"
+  },
+  "opts": {
+    "recurse": true
   }
 }

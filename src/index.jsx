@@ -9,7 +9,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { UserProvider } from './context/UserContext';
 import App from './App';
 
-/** @type {import('react-dom/client').Root} */
 const root = createRoot(document.getElementById('root'));
 root.render(
     <BrowserRouter basename="/TU_TP1">

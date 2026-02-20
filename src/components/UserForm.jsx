@@ -1,5 +1,5 @@
 /**
- * @fileoverview Composant formulaire d'inscription utilisateur avec validation.
+ * @fileoverview Composant formulaire d'inscription utilisateur avec validation et appels API.
  * @module UserForm
  */
 
@@ -27,8 +27,8 @@ const ERROR_MESSAGES = {
 
 /**
  * Composant de formulaire d'inscription utilisateur.
- * Gère la saisie, la validation en temps réel (onBlur et onChange) et la soumission.
- * Les données sont ajoutées au contexte global et sauvegardées dans le localStorage.
+ * Gère la saisie, la validation en temps réel et la soumission via API.
+ * Gère les erreurs serveur (400, 500) avec feedback utilisateur.
  *
  * @component
  * @returns {React.JSX.Element} Le formulaire d'inscription avec validation intégrée
@@ -48,6 +48,8 @@ function UserForm() {
 
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
+    const [submitting, setSubmitting] = useState(false);
+    const [apiError, setApiError] = useState(null);
 
     const validateField = useCallback((field, value) => {
         let result;
@@ -79,6 +81,7 @@ function UserForm() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        setApiError(null);
 
         setErrors(prev => {
             if (!prev[name] && !touched[name]) return prev;
@@ -126,24 +129,54 @@ function UserForm() {
         return true;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!isFormValid()) return;
+        if (!isFormValid() || submitting) return;
 
-        addUser(formData);
-        localStorage.setItem('user', JSON.stringify(formData));
-        toast.success('Inscription réussie avec succès !');
-        setFormData({ name: '', firstName: '', email: '', birthDate: '', postalCode: '', city: '' });
-        setErrors({});
-        setTouched({});
+        setSubmitting(true);
+        setApiError(null);
 
-        setTimeout(() => {
-            navigate('/');
-        }, 1500);
+        try {
+            await addUser(formData);
+            toast.success('Inscription réussie avec succès !');
+            setFormData({ name: '', firstName: '', email: '', birthDate: '', postalCode: '', city: '' });
+            setErrors({});
+            setTouched({});
+
+            setTimeout(() => {
+                navigate('/');
+            }, 1500);
+        } catch (error) {
+            if (error.response) {
+                const status = error.response.status;
+                if (status === 400) {
+                    const message = error.response.data?.message || 'Cet email est déjà utilisé';
+                    setApiError(message);
+                    toast.error(message);
+                } else if (status >= 500) {
+                    setApiError('Le serveur est temporairement indisponible. Veuillez réessayer plus tard.');
+                    toast.error('Erreur serveur. Veuillez réessayer plus tard.');
+                } else {
+                    setApiError('Une erreur est survenue');
+                    toast.error('Une erreur est survenue');
+                }
+            } else {
+                setApiError('Impossible de contacter le serveur. Vérifiez votre connexion.');
+                toast.error('Erreur réseau. Vérifiez votre connexion.');
+            }
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
         <form onSubmit={handleSubmit}>
+            {apiError && (
+                <div className="api-error" role="alert" data-testid="api-error">
+                    {apiError}
+                </div>
+            )}
+
             <div>
                 <label htmlFor="name">Nom</label>
                 <input
@@ -222,7 +255,9 @@ function UserForm() {
                 {errors.city && <span className="error" role="alert">{errors.city}</span>}
             </div>
 
-            <button type="submit" disabled={!isFormValid()}>Soumettre</button>
+            <button type="submit" disabled={!isFormValid() || submitting}>
+                {submitting ? 'Envoi en cours...' : 'Soumettre'}
+            </button>
 
             <ToastContainer />
         </form>

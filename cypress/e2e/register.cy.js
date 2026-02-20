@@ -11,6 +11,8 @@ describe('Inscription utilisateur - Parcours complet', () => {
     });
 
     beforeEach(() => {
+        cy.intercept('GET', '**/users', []).as('getUsers');
+        cy.intercept('POST', '**/users', { statusCode: 201, body: { id: 11 } }).as('createUser');
         cy.visit('/register');
     });
 
@@ -51,23 +53,14 @@ describe('Inscription utilisateur - Parcours complet', () => {
         cy.get('#city').type(user.city);
 
         cy.get('.error').should('not.exist');
-
         cy.get('button[type="submit"]').should('not.be.disabled');
-
         cy.get('button[type="submit"]').click();
 
+        cy.wait('@createUser');
         cy.contains('succès', { matchCase: false }).should('be.visible');
-
-        cy.get('#name').should('have.value', '');
-        cy.get('#firstName').should('have.value', '');
-        cy.get('#email').should('have.value', '');
-        cy.get('#postalCode').should('have.value', '');
-        cy.get('#city').should('have.value', '');
-
-        cy.get('button[type="submit"]').should('be.disabled');
     });
 
-    it('doit sauvegarder les données dans le localStorage', () => {
+    it('doit appeler l\'API POST avec les bonnes données', () => {
         const user = generateValidUser();
         const formattedDate = user.birthDate.toISOString().split('T')[0];
 
@@ -79,13 +72,7 @@ describe('Inscription utilisateur - Parcours complet', () => {
         cy.get('#city').type(user.city);
         cy.get('button[type="submit"]').click();
 
-        cy.window().then((win) => {
-            const stored = JSON.parse(win.localStorage.getItem('user'));
-            expect(stored.name).to.equal(user.name);
-            expect(stored.firstName).to.equal(user.firstName);
-            expect(stored.email).to.equal(user.email);
-            expect(stored.city).to.equal(user.city);
-        });
+        cy.wait('@createUser').its('request.body').should('include', { name: user.name, email: user.email });
     });
 
     it('doit rejeter un utilisateur mineur', () => {
@@ -103,24 +90,43 @@ describe('Inscription utilisateur - Parcours complet', () => {
         cy.get('button[type="submit"]').should('be.disabled');
     });
 
-    it('doit permettre de corriger les erreurs et soumettre', () => {
+    it('doit afficher une erreur quand l\'email existe déjà (400)', () => {
+        cy.intercept('POST', '**/users', {
+            statusCode: 400,
+            body: { message: 'Cet email est déjà utilisé' }
+        }).as('createUserFail');
+
         const user = generateValidUser();
         const formattedDate = user.birthDate.toISOString().split('T')[0];
 
-        cy.get('#name').type('123Bad').blur();
-        cy.get('.error').should('contain', 'Nom invalide');
-
-        cy.get('#name').clear().type(user.name).blur();
-        cy.get('.error').should('not.exist');
-
+        cy.get('#name').type(user.name);
         cy.get('#firstName').type(user.firstName);
         cy.get('#email').type(user.email);
         cy.get('#birthDate').type(formattedDate);
         cy.get('#postalCode').type(user.postalCode);
         cy.get('#city').type(user.city);
-
-        cy.get('button[type="submit"]').should('not.be.disabled');
         cy.get('button[type="submit"]').click();
-        cy.contains('succès', { matchCase: false }).should('be.visible');
+
+        cy.wait('@createUserFail');
+        cy.get('[data-testid="api-error"]').should('contain', 'email est déjà utilisé');
+    });
+
+    it('doit afficher une erreur quand le serveur crash (500)', () => {
+        cy.intercept('POST', '**/users', { statusCode: 500, body: {} }).as('serverCrash');
+
+        const user = generateValidUser();
+        const formattedDate = user.birthDate.toISOString().split('T')[0];
+
+        cy.get('#name').type(user.name);
+        cy.get('#firstName').type(user.firstName);
+        cy.get('#email').type(user.email);
+        cy.get('#birthDate').type(formattedDate);
+        cy.get('#postalCode').type(user.postalCode);
+        cy.get('#city').type(user.city);
+        cy.get('button[type="submit"]').click();
+
+        cy.wait('@serverCrash');
+        cy.get('[data-testid="api-error"]').should('contain', 'serveur');
+        cy.get('#name').should('have.value', user.name);
     });
 });

@@ -2,7 +2,7 @@
 
 ![Build Passing](https://github.com/snaike71/TU_TP1/actions/workflows/ci.yml/badge.svg)
 
-Application multi-pages React avec formulaire d'inscription, validation, tests unitaires/intégration (Jest), tests E2E (Cypress) et pipeline CI/CD.
+Application multi-pages React avec formulaire d'inscription, appels API (Axios/JSONPlaceholder), tests unitaires/intégration avec mocks (Jest), tests E2E (Cypress) et pipeline CI/CD.
 
 ## Installation
 
@@ -28,17 +28,26 @@ npm run jsdoc           # Génération de la documentation JSDoc
 - **`/`** (Accueil) : Message de bienvenue, compteur d'inscrits, liste des utilisateurs
 - **`/register`** (Inscription) : Formulaire avec validation en temps réel
 - **État partagé** : React Context (`UserProvider`) pour le tableau des utilisateurs
+- **API** : Axios vers JSONPlaceholder (`GET /users`, `POST /users`)
 
-## Tests E2E Cypress
+## Stratégie de Mocking
 
-```bash
-# Lancer le serveur puis les tests
-npm run dev
-npm run cypress:run
-```
+### Tests d'intégration (Jest)
+
+Les appels réseau sont **isolés** via `jest.mock('axios')`. Aucun appel réel n'est effectué.
 
 Scénarios couverts :
-- `register.cy.js` : Inscription, validation, erreurs, données anonymisées (Faker.js)
+- **Succès (201)** : Inscription nominale, formulaire vidé, toast succès
+- **Erreur métier (400)** : Email déjà utilisé → message d'erreur spécifique affiché
+- **Crash serveur (500)** : Serveur indisponible → l'app ne plante pas, alerte utilisateur
+- **Erreur réseau** : Pas de connexion → message d'erreur
+
+### Tests E2E (Cypress)
+
+Les routes API sont **bouchonnées** via `cy.intercept()` pour ne pas dépendre d'un backend réel.
+
+Scénarios couverts :
+- `register.cy.js` : Inscription, validation, erreurs 400/500, données anonymisées (Faker.js)
 - `navigation.cy.js` : Parcours multi-pages nominal + scénario d'erreur
 
 ## Pipeline CI/CD
@@ -46,20 +55,18 @@ Scénarios couverts :
 Le workflow GitHub Actions exécute automatiquement :
 1. **Installation** des dépendances
 2. **Linting** (ESLint)
-3. **Tests unitaires** (Jest) avec rapport de couverture
-4. **Tests E2E** (Cypress)
-5. **Déploiement** GitHub Pages (si tests verts)
+3. **Tests unitaires** (Jest) avec rapport de couverture + upload Codecov
+4. **Tests E2E** (Cypress) en mode headless
+5. **Déploiement** app + documentation JSDoc sur GitHub Pages (si tests verts)
 
-## Voir la documentation
+## Documentation
 
-```bash
-npm run jsdoc
-xdg-open docs/index.html
-```
+La documentation JSDoc est générée et déployée automatiquement sur GitHub Pages :
 
-## Voir le rapport de couverture
+- **Live** : https://snaike71.github.io/TU_TP1/docs/
+- **Locale** : `npm run jsdoc` puis ouvrir `docs/index.html`
 
-```bash
-npm run test:coverage
-xdg-open coverage/lcov-report/index.html
-```
+## Codecov
+
+Le rapport de couverture est uploadé automatiquement sur [Codecov](https://codecov.io/) à chaque push.
+Pour activer : ajouter le secret `CODECOV_TOKEN` dans les settings du repo GitHub.

@@ -132,3 +132,14 @@ button:disabled {
 .back-link:hover {
     background: #2980b9;
 }
+
+.api-error {
+    padding: 12px;
+    margin-bottom: 16px;
+    background: #fdecea;
+    color: #c0392b;
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    text-align: center;
+}

@@ -10,9 +10,15 @@ describe('Navigation multi-pages', () => {
         city: faker.location.city()
     });
 
+    beforeEach(() => {
+        cy.intercept('GET', '**/users', []).as('getUsers');
+        cy.intercept('POST', '**/users', { statusCode: 201, body: { id: 11 } }).as('createUser');
+    });
+
     describe('Scénario Nominal', () => {
         it('doit inscrire un utilisateur et le voir sur l\'accueil', () => {
             cy.visit('/');
+            cy.wait('@getUsers');
 
             cy.get('h1').should('contain', 'Bienvenue');
             cy.get('[data-testid="user-count"]').should('contain', '0 utilisateur');
@@ -36,6 +42,7 @@ describe('Navigation multi-pages', () => {
             cy.get('button[type="submit"]').should('not.be.disabled');
             cy.get('button[type="submit"]').click();
 
+            cy.wait('@createUser');
             cy.contains('succès', { matchCase: false }).should('be.visible');
 
             cy.url().should('not.include', '/register');
@@ -51,6 +58,7 @@ describe('Navigation multi-pages', () => {
     describe('Scénario d\'Erreur', () => {
         it('ne doit pas ajouter un utilisateur invalide à la liste', () => {
             cy.visit('/');
+            cy.wait('@getUsers');
 
             const validUser = generateValidUser();
             const formattedDate = validUser.birthDate.toISOString().split('T')[0];
@@ -63,6 +71,7 @@ describe('Navigation multi-pages', () => {
             cy.get('#postalCode').type(validUser.postalCode);
             cy.get('#city').type(validUser.city);
             cy.get('button[type="submit"]').click();
+            cy.wait('@createUser');
 
             cy.get('[data-testid="user-count"]').should('contain', '1 utilisateur inscrit');
 

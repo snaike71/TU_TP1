@@ -5,15 +5,23 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import { UserProvider } from '../context/UserContext';
 import UserForm from './UserForm';
+import axios from 'axios';
 
-function renderWithProviders(ui) {
-    return render(
-        <MemoryRouter>
-            <UserProvider>
-                {ui}
-            </UserProvider>
-        </MemoryRouter>
-    );
+jest.mock('axios');
+
+async function renderWithProviders(ui) {
+    axios.get.mockResolvedValue({ data: [] });
+    let result;
+    await waitFor(() => {
+        result = render(
+            <MemoryRouter>
+                <UserProvider>
+                    {ui}
+                </UserProvider>
+            </MemoryRouter>
+        );
+    });
+    return result;
 }
 
 describe('UserForm - Tests d\'intégration', () => {
@@ -22,7 +30,8 @@ describe('UserForm - Tests d\'intégration', () => {
     beforeEach(() => {
         user = userEvent.setup();
         localStorage.clear();
-        jest.restoreAllMocks();
+        jest.clearAllMocks();
+        axios.get.mockResolvedValue({ data: [] });
     });
 
     describe('Rendu initial', () => {
@@ -183,44 +192,9 @@ describe('UserForm - Tests d\'intégration', () => {
         });
     });
 
-    describe('Soumission réussie', () => {
-        test('doit sauvegarder dans le localStorage avec les bonnes données', async () => {
-            const spySetItem = jest.spyOn(Storage.prototype, 'setItem');
-            renderWithProviders(<UserForm />);
-            await fillValidForm(user);
-
-            const button = screen.getByRole('button', { name: /soumettre/i });
-            await user.click(button);
-
-            expect(spySetItem).toHaveBeenCalledWith(
-                'user',
-                expect.stringContaining('Dupont')
-            );
-            expect(spySetItem).toHaveBeenCalledWith(
-                'user',
-                expect.stringContaining('Jean')
-            );
-            expect(spySetItem).toHaveBeenCalledWith(
-                'user',
-                expect.stringContaining('jean@example.com')
-            );
-        });
-
-        test('doit vider les champs après soumission', async () => {
-            renderWithProviders(<UserForm />);
-            await fillValidForm(user);
-
-            const button = screen.getByRole('button', { name: /soumettre/i });
-            await user.click(button);
-
-            expect(screen.getByLabelText('Nom')).toHaveValue('');
-            expect(screen.getByLabelText('Prénom')).toHaveValue('');
-            expect(screen.getByLabelText('Email')).toHaveValue('');
-            expect(screen.getByLabelText('Code postal')).toHaveValue('');
-            expect(screen.getByLabelText('Ville')).toHaveValue('');
-        });
-
-        test('doit afficher un message de succès (toaster)', async () => {
+    describe('Soumission réussie - API 201', () => {
+        test('doit appeler l\'API POST et afficher le succès', async () => {
+            axios.post.mockResolvedValueOnce({ data: { id: 11 }, status: 201 });
             renderWithProviders(<UserForm />);
             await fillValidForm(user);
 
@@ -228,18 +202,148 @@ describe('UserForm - Tests d\'intégration', () => {
             await user.click(button);
 
             await waitFor(() => {
+                expect(axios.post).toHaveBeenCalledWith(
+                    'https://jsonplaceholder.typicode.com/users',
+                    expect.objectContaining({
+                        name: 'Dupont',
+                        firstName: 'Jean',
+                        email: 'jean@example.com'
+                    })
+                );
+            });
+
+            await waitFor(() => {
                 expect(screen.getByText(/succès/i)).toBeInTheDocument();
             });
         });
 
-        test('le bouton doit redevenir désactivé après soumission', async () => {
+        test('doit vider les champs après soumission réussie', async () => {
+            axios.post.mockResolvedValueOnce({ data: { id: 11 }, status: 201 });
             renderWithProviders(<UserForm />);
             await fillValidForm(user);
 
             const button = screen.getByRole('button', { name: /soumettre/i });
             await user.click(button);
 
-            expect(button).toBeDisabled();
+            await waitFor(() => {
+                expect(screen.getByLabelText('Nom')).toHaveValue('');
+            });
+            expect(screen.getByLabelText('Prénom')).toHaveValue('');
+            expect(screen.getByLabelText('Email')).toHaveValue('');
+            expect(screen.getByLabelText('Code postal')).toHaveValue('');
+            expect(screen.getByLabelText('Ville')).toHaveValue('');
+        });
+
+        test('le bouton doit redevenir désactivé après soumission', async () => {
+            axios.post.mockResolvedValueOnce({ data: { id: 11 }, status: 201 });
+            renderWithProviders(<UserForm />);
+            await fillValidForm(user);
+
+            const button = screen.getByRole('button', { name: /soumettre/i });
+            await user.click(button);
+
+            await waitFor(() => {
+                expect(button).toBeDisabled();
+            });
+        });
+    });
+
+    describe('Erreur métier - API 400 (email déjà utilisé)', () => {
+        test('doit afficher le message d\'erreur du serveur', async () => {
+            axios.post.mockRejectedValueOnce({
+                response: {
+                    status: 400,
+                    data: { message: 'Cet email est déjà utilisé' }
+                }
+            });
+            renderWithProviders(<UserForm />);
+            await fillValidForm(user);
+
+            const button = screen.getByRole('button', { name: /soumettre/i });
+            await user.click(button);
+
+            await waitFor(() => {
+                expect(screen.getByTestId('api-error')).toHaveTextContent('Cet email est déjà utilisé');
+            });
+        });
+
+        test('ne doit pas vider le formulaire après une erreur 400', async () => {
+            axios.post.mockRejectedValueOnce({
+                response: {
+                    status: 400,
+                    data: { message: 'Cet email est déjà utilisé' }
+                }
+            });
+            renderWithProviders(<UserForm />);
+            await fillValidForm(user);
+
+            const button = screen.getByRole('button', { name: /soumettre/i });
+            await user.click(button);
+
+            await waitFor(() => {
+                expect(screen.getByTestId('api-error')).toBeInTheDocument();
+            });
+            expect(screen.getByLabelText('Nom')).toHaveValue('Dupont');
+            expect(screen.getByLabelText('Email')).toHaveValue('jean@example.com');
+        });
+    });
+
+    describe('Crash serveur - API 500', () => {
+        test('doit afficher un message d\'erreur serveur sans planter', async () => {
+            axios.post.mockRejectedValueOnce({
+                response: {
+                    status: 500,
+                    data: { message: 'Internal Server Error' }
+                }
+            });
+            renderWithProviders(<UserForm />);
+            await fillValidForm(user);
+
+            const button = screen.getByRole('button', { name: /soumettre/i });
+            await user.click(button);
+
+            await waitFor(() => {
+                expect(screen.getByTestId('api-error')).toHaveTextContent(/serveur.*indisponible/i);
+            });
+
+            expect(screen.getByLabelText('Nom')).toBeInTheDocument();
+            expect(button).not.toBeDisabled();
+        });
+
+        test('l\'application ne doit pas planter après une erreur 500', async () => {
+            axios.post.mockRejectedValueOnce({
+                response: {
+                    status: 500,
+                    data: {}
+                }
+            });
+            renderWithProviders(<UserForm />);
+            await fillValidForm(user);
+
+            const button = screen.getByRole('button', { name: /soumettre/i });
+            await user.click(button);
+
+            await waitFor(() => {
+                expect(screen.getByTestId('api-error')).toBeInTheDocument();
+            });
+
+            expect(screen.getByLabelText('Nom')).toHaveValue('Dupont');
+            expect(screen.getByLabelText('Prénom')).toHaveValue('Jean');
+        });
+    });
+
+    describe('Erreur réseau (pas de connexion)', () => {
+        test('doit afficher un message d\'erreur réseau', async () => {
+            axios.post.mockRejectedValueOnce(new Error('Network Error'));
+            renderWithProviders(<UserForm />);
+            await fillValidForm(user);
+
+            const button = screen.getByRole('button', { name: /soumettre/i });
+            await user.click(button);
+
+            await waitFor(() => {
+                expect(screen.getByTestId('api-error')).toHaveTextContent(/connexion|serveur/i);
+            });
         });
     });
 });
