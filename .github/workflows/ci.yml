@@ -112,6 +112,8 @@ jobs:
 
       - name: Build app
         run: npx vite build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: Start server and run Cypress
         uses: cypress-io/github-action@v6
@@ -146,6 +148,8 @@ jobs:
 
       - name: Build app
         run: npx vite build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: Generate JSDoc documentation
         run: npm run jsdoc

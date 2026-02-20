@@ -5,7 +5,7 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = 'https://jsonplaceholder.typicode.com';
+const API_BASE_URL = process.env.VITE_API_URL || 'https://jsonplaceholder.typicode.com';
 
 /**
  * Récupère la liste des utilisateurs depuis l'API.
