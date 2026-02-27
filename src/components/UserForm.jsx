@@ -31,9 +31,11 @@ const ERROR_MESSAGES = {
  * Gère les erreurs serveur (400, 500) avec feedback utilisateur.
  *
  * @component
+ * @param {Object} [props] - Propriétés du composant.
+ * @param {(user: Object) => void} [props.onSuccess] - Callback optionnel appelé après une inscription réussie.
  * @returns {React.JSX.Element} Le formulaire d'inscription avec validation intégrée
  */
-function UserForm() {
+function UserForm({ onSuccess } = {}) {
     const { addUser } = useUsers();
     const navigate = useNavigate();
 
@@ -138,6 +140,9 @@ function UserForm() {
 
         try {
             await addUser(formData);
+            if (typeof onSuccess === 'function') {
+                onSuccess(formData);
+            }
             toast.success('Inscription réussie avec succès !');
             setFormData({ name: '', firstName: '', email: '', birthDate: '', postalCode: '', city: '' });
             setErrors({});
