@@ -49,11 +49,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Restore node_modules
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run ESLint
         run: npm run lint
@@ -70,11 +67,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Restore node_modules
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run unit & integration tests with coverage
         run: npm run test:coverage -- --ci
@@ -242,11 +236,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Restore node_modules
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build app
         run: npx vite build
