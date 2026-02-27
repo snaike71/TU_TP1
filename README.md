@@ -78,5 +78,3 @@ La documentation JSDoc est générée et déployée automatiquement sur GitHub P
 
 Le rapport de couverture est uploadé automatiquement sur [Codecov](https://codecov.io/) à chaque push.
 Pour activer : ajouter le secret `CODECOV_TOKEN` dans les settings du repo GitHub.
-
-Test bypass publish 02/27/2026 14:13:15
