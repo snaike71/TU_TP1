@@ -130,9 +130,10 @@ function validateEmail(email) {
         return { valid: false, error: 'INVALID_INPUT' };
     }
 
+    const normalizedEmail = email.trim();
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
         return { valid: false, error: 'INVALID_EMAIL_FORMAT' };
     }
 
