@@ -1,17 +1,27 @@
 {
-  "name": "tp1",
+  "name": "@snaike7/tp-ynov",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build-npm-ci": "rm -rf dist && mkdir dist && NODE_ENV=production npx babel src --out-dir dist --copy-files --no-copy-ignored --ignore \"**/*.test.js\",\"**/*.test.jsx\",\"**/*.spec.js\",\"**/*.spec.jsx\",\"**/__tests__/**\",\"**/jest.setup.js\"",
+    "build-npm": "SET NODE_ENV=production && if exist dist rmdir /s /q dist && mkdir dist && npx babel src --out-dir dist --copy-files --no-copy-ignored --ignore \"**/*.test.js\",\"**/*.test.jsx\",\"**/*.spec.js\",\"**/*.spec.jsx\",\"**/__tests__/**\",\"**/jest.setup.js\"",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "lint": "eslint src/",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "jsdoc": "jsdoc -c ./jsdoc.config.json -r -d ./docs"
+    "jsdoc": "jsdoc -c ./jsdoc.config.json -r -d ./docs",
+    "prepublishOnly": "npm run build-npm-ci"
   },
   "repository": {
     "type": "git",
@@ -25,6 +35,9 @@
   },
   "homepage": "https://github.com/snaike71/TU_TP1#readme",
   "devDependencies": {
+    "@babel/cli": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@babel/plugin-transform-react-jsx": "^7.28.6",
     "@babel/preset-env": "^7.29.0",
     "@babel/preset-react": "^7.28.5",
     "@eslint/js": "^9.39.2",

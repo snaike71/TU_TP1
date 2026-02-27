@@ -1,6 +1,6 @@
 # TP1 - Moteur de validation
 
-![Build Passing](https://github.com/snaike71/TU_TP1/actions/workflows/ci.yml/badge.svg)
+![Build Passing](https://github.com/snaike71/TU_TP1/actions/workflows/build_test_react.yml/badge.svg)
 
 Application multi-pages React avec formulaire d'inscription, appels API (Axios/JSONPlaceholder), tests unitaires/intégration avec mocks (Jest), tests E2E (Cypress) et pipeline CI/CD.
 
@@ -57,7 +57,15 @@ Le workflow GitHub Actions exécute automatiquement :
 2. **Linting** (ESLint)
 3. **Tests unitaires** (Jest) avec rapport de couverture + upload Codecov
 4. **Tests E2E** (Cypress) en mode headless
-5. **Déploiement** app + documentation JSDoc sur GitHub Pages (si tests verts)
+5. **Publication NPM** conditionnelle (skip si la version locale n'est pas strictement supérieure à la version NPM)
+6. **Déploiement** app + documentation JSDoc sur GitHub Pages (si tests verts)
+
+La publication NPM utilise le secret GitHub `NPM_TOKEN`.
+
+## Package NPM
+
+- **Package** : https://www.npmjs.com/package/@snaike7/tp-ynov
+- **Build package** : `npm run build-npm-ci` (Linux/macOS CI) et `npm run build-npm` (Windows local)
 
 ## Documentation
 

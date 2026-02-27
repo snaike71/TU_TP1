@@ -17,3 +17,5 @@ root.render(
         </UserProvider>
     </BrowserRouter>
 );
+
+export default App;
