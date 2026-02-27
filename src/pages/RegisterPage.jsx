@@ -15,10 +15,12 @@ import UserForm from '../components/UserForm';
  * @returns {React.JSX.Element}
  */
 function RegisterPage() {
+    const handleRegisterSuccess = () => {};
+
     return (
         <div>
             <h1>Formulaire d'inscription</h1>
-            <UserForm />
+            <UserForm onSuccess={handleRegisterSuccess} />
             <Link to="/" className="back-link">Retour à l'accueil</Link>
         </div>
     );

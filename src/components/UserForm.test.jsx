@@ -11,12 +11,18 @@ jest.mock('axios');
 
 async function renderWithProviders(ui) {
     axios.get.mockResolvedValue({ data: [] });
+    const elementWithRequiredProps =
+        React.isValidElement(ui) &&
+        ui.type === UserForm &&
+        typeof ui.props.onSuccess !== 'function'
+            ? React.cloneElement(ui, { onSuccess: jest.fn() })
+            : ui;
     let result;
     await waitFor(() => {
         result = render(
             <MemoryRouter>
                 <UserProvider>
-                    {ui}
+                    {elementWithRequiredProps}
                 </UserProvider>
             </MemoryRouter>
         );
