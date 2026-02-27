@@ -32,7 +32,7 @@ const ERROR_MESSAGES = {
  *
  * @component
  * @param {Object} [props] - Propriétés du composant.
- * @param {(user: Object) => void} [props.onSuccess] - Callback optionnel appelé après une inscription réussie.
+ * @param {function(Object): void} [props.onSuccess] - Callback optionnel appelé après une inscription réussie.
  * @returns {React.JSX.Element} Le formulaire d'inscription avec validation intégrée
  */
 function UserForm({ onSuccess } = {}) {
