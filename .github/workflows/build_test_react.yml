@@ -220,10 +220,75 @@ jobs:
         if: steps.version_check.outputs.should_publish != 'true'
         run: echo "NPM publish skipped."
 
+  validate-and-publish-api:
+    name: Validate Containerized API and Push Image
+    runs-on: ubuntu-latest
+    needs: publish-npm
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build MySQL image
+        run: docker build -t tp1-mysql:test ./mysql
+
+      - name: Build API image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:${{ github.sha }} ./server
+
+      - name: Create docker network
+        run: docker network create tp1-ci-net
+
+      - name: Start MySQL container
+        run: |
+          docker run -d --name tp1-mysql-ci --network tp1-ci-net \
+            -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+            -e MYSQL_DATABASE=${{ secrets.MYSQL_DB }} \
+            -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
+            -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
+            tp1-mysql:test
+
+      - name: Wait for MySQL initialization
+        run: sleep 20
+
+      - name: Start API container
+        run: |
+          docker run -d --name tp1-api-ci --network tp1-ci-net -p 8000:8000 \
+            -e MYSQL_HOST=tp1-mysql-ci \
+            -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
+            -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
+            -e MYSQL_DB=${{ secrets.MYSQL_DB }} \
+            -e MYSQL_DATABASE=${{ secrets.MYSQL_DB }} \
+            -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
+            ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:${{ github.sha }}
+
+      - name: Wait for API startup
+        run: sleep 8
+
+      - name: Validate /users endpoint with curl
+        run: |
+          HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" http://localhost:8000/users)
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "Expected HTTP 200, got $HTTP_CODE"
+            cat response.json || true
+            exit 1
+          fi
+          python3 -c "import json; d=json.load(open('response.json')); users=d.get('utilisateurs', []); assert isinstance(users, list) and len(users) > 0, 'Validation failed: /users is empty.'"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push API image to Docker Hub
+        run: |
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:latest
+
   deploy:
     name: Deploy App & Documentation
     runs-on: ubuntu-latest
-    needs: publish-npm
+    needs: validate-and-publish-api
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: github-pages
