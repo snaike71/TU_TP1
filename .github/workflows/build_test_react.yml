@@ -228,40 +228,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build MySQL image
-        run: docker build -t tp1-mysql:test ./mysql
+      - name: Start stack with docker compose
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DB: ${{ secrets.MYSQL_DB }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        run: docker compose up --detach --build --wait
 
-      - name: Build API image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:${{ github.sha }} ./server
-
-      - name: Create docker network
-        run: docker network create tp1-ci-net
-
-      - name: Start MySQL container
+      - name: Check all containers are running
         run: |
-          docker run -d --name tp1-mysql-ci --network tp1-ci-net \
-            -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
-            -e MYSQL_DATABASE=${{ secrets.MYSQL_DB }} \
-            -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
-            -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-            tp1-mysql:test
-
-      - name: Wait for MySQL initialization
-        run: sleep 20
-
-      - name: Start API container
-        run: |
-          docker run -d --name tp1-api-ci --network tp1-ci-net -p 8000:8000 \
-            -e MYSQL_HOST=tp1-mysql-ci \
-            -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
-            -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-            -e MYSQL_DB=${{ secrets.MYSQL_DB }} \
-            -e MYSQL_DATABASE=${{ secrets.MYSQL_DB }} \
-            -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-            ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:${{ github.sha }}
-
-      - name: Wait for API startup
-        run: sleep 8
+          docker compose ps
+          docker compose ps | grep -E "db.*healthy" || (echo "db is not healthy" && exit 1)
+          docker compose ps | grep -E "api.*running|api.*Up" || (echo "api is not running" && exit 1)
+          docker compose ps | grep -E "adminer.*running|adminer.*Up" || (echo "adminer is not running" && exit 1)
 
       - name: Validate /users endpoint with curl
         run: |
@@ -281,8 +261,7 @@ jobs:
 
       - name: Push API image to Docker Hub
         run: |
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:${{ github.sha }}
+          docker tag tp1-api ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/tp1-fastapi:latest
 
   deploy:
