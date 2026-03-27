@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+docs/
+.git/
+.github/
+.cursor/
+.vscode/
+cypress/videos/
+cypress/screenshots/
+*.log
+.env

@@ -43,7 +43,7 @@ function UserProvider({ children }) {
         setLoading(true);
         try {
             const data = await getUsers();
-            setUsers(data);
+            setUsers(Array.isArray(data) ? data : []);
         } catch {
             setUsers([]);
         } finally {
@@ -57,7 +57,7 @@ function UserProvider({ children }) {
 
     const addUser = async (userData) => {
         const created = await createUser(userData);
-        setUsers(prev => [...prev, { ...userData, id: created.id }]);
+        setUsers(prev => [...(Array.isArray(prev) ? prev : []), { ...userData, id: created.id }]);
         return created;
     };
 

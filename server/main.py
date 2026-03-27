@@ -2,6 +2,7 @@ import mysql.connector
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
@@ -25,12 +26,38 @@ conn = mysql.connector.connect(
     host=os.getenv("MYSQL_HOST"),
 )
 
+class UserCreate(BaseModel):
+    name: str
+    firstName: str
+    email: str
+    birthDate: str | None = None
+    postalCode: str | None = None
+    city: str | None = None
+
 
 @app.get("/users")
 async def get_users():
-    cursor = conn.cursor()
-    sql_select_Query = "select * from utilisateur"
+    cursor = conn.cursor(dictionary=True)
+    sql_select_Query = "select id, nom, prenom, email from utilisateur"
     cursor.execute(sql_select_Query)
     records = cursor.fetchall()
     print("Total number of rows in table: ", cursor.rowcount)
-    return {"utilisateurs": records}
+    users = [
+        {
+            "id": row["id"],
+            "name": row["nom"],
+            "firstName": row["prenom"],
+            "email": row["email"],
+        }
+        for row in records
+    ]
+    return {"utilisateurs": users}
+
+
+@app.post("/users")
+async def create_user(user: UserCreate):
+    cursor = conn.cursor()
+    sql_insert_query = "insert into utilisateur (nom, prenom, email) values (%s, %s, %s)"
+    cursor.execute(sql_insert_query, (user.name, user.firstName, user.email))
+    conn.commit()
+    return {"id": cursor.lastrowid}

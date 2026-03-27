@@ -15,7 +15,9 @@ const API_BASE_URL = process.env.VITE_API_URL || 'https://jsonplaceholder.typico
  */
 async function getUsers() {
     const response = await axios.get(`${API_BASE_URL}/users`);
-    return response.data;
+    return Array.isArray(response.data?.utilisateurs)
+        ? response.data.utilisateurs
+        : response.data;
 }
 
 /**

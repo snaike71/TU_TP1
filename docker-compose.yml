@@ -1,5 +1,6 @@
 services:
   db:
+    image: tp1-db:latest
     build:
       context: ./mysql
       dockerfile: Dockerfile
@@ -9,7 +10,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,6 +24,7 @@ services:
         condition: service_healthy
 
   api:
+    image: tp1-api:latest
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -38,3 +40,26 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8000/users > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    image: tp1-frontend:latest
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8001
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5173/TU_TP1/ > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
