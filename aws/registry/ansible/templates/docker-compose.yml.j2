@@ -1,0 +1,39 @@
+services:
+  registry:
+    image: registry:2
+    restart: always
+    expose:
+      - "5000"
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/registry.password
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+    volumes:
+      - ./data:/var/lib/registry
+      - ./auth:/auth:ro
+
+  ui:
+    image: joxit/docker-registry-ui:main
+    restart: always
+    expose:
+      - "80"
+    environment:
+      - REGISTRY_TITLE=My Registry
+      - REGISTRY_URL=https://{{ public_ip }}:443
+      - SINGLE_REGISTRY=true
+      - DELETE_IMAGES=true
+    depends_on:
+      - registry
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./conf:/etc/nginx/conf.d:ro
+    depends_on:
+      - registry
+      - ui

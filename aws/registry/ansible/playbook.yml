@@ -1,0 +1,84 @@
+---
+- name: Deploy secured Docker registry (HTTPS + Nginx)
+  hosts: registry
+  become: true
+  vars:
+    registry_dir: /home/ubuntu/registry
+    public_ip: "{{ ansible_host }}"
+
+  tasks:
+    - name: Install Docker, Compose, htpasswd, openssl
+      ansible.builtin.apt:
+        update_cache: true
+        name:
+          - docker.io
+          - docker-compose-v2
+          - apache2-utils
+          - openssl
+        state: present
+
+    - name: Start Docker
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add ubuntu to docker group
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+        append: true
+
+    - name: Create directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ registry_dir }}/ssl"
+        - "{{ registry_dir }}/conf"
+        - "{{ registry_dir }}/auth"
+        - "{{ registry_dir }}/data"
+
+    - name: Create htpasswd (admin / admin123)
+      ansible.builtin.command:
+        cmd: "htpasswd -Bbc {{ registry_dir }}/auth/registry.password admin admin123"
+        creates: "{{ registry_dir }}/auth/registry.password"
+
+    - name: Generate self-signed SSL certificate
+      ansible.builtin.command:
+        argv:
+          - openssl
+          - req
+          - -newkey
+          - rsa:4096
+          - -nodes
+          - -keyout
+          - "{{ registry_dir }}/ssl/registry.key"
+          - -x509
+          - -days
+          - "365"
+          - -out
+          - "{{ registry_dir }}/ssl/registry.crt"
+          - -subj
+          - "/CN={{ public_ip }}"
+          - -addext
+          - "subjectAltName=IP:{{ public_ip }}"
+        creates: "{{ registry_dir }}/ssl/registry.crt"
+
+    - name: Push Nginx config
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: "{{ registry_dir }}/conf/default.conf"
+        mode: "0644"
+
+    - name: Push docker-compose.yml
+      ansible.builtin.template:
+        src: docker-compose.yml.j2
+        dest: "{{ registry_dir }}/docker-compose.yml"
+        mode: "0644"
+
+    - name: Start stack
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ registry_dir }}"
