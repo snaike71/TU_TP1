@@ -78,3 +78,45 @@ La documentation JSDoc est générée et déployée automatiquement sur GitHub P
 
 Le rapport de couverture est uploadé automatiquement sur [Codecov](https://codecov.io/) à chaque push.
 Pour activer : ajouter le secret `CODECOV_TOKEN` dans les settings du repo GitHub.
+
+## Phase 1 — Infrastructure (Terraform) — membre A
+
+Ce depot ne contient **que** le code **Terraform** pour le projet (phases Ansible et GitHub Actions deploiement sont hors de ce scope).
+
+### `infra/prod/` — hote applicatif (sujet principal)
+
+Region **eu-west-3**, Ubuntu 24.04 (AMI dynamique), instance **t3.micro**, cle SSH **generee par Terraform** (pas de cle dans le repo).
+
+**Security group** (ports prevus pour la stack future) :
+
+- **22** : SSH (`admin_ssh_cidr`, defaut `0.0.0.0/0` — a restreindre en production)
+- **80** : frontend
+- **8001** : API
+
+**Commandes** :
+
+```bash
+cd infra/prod
+terraform init
+terraform apply
+```
+
+**Outputs** : `public_ip`, `private_key_pem` (sensible), `private_key_path`, `ssh_command`.
+
+**Variables** : voir `infra/prod/variables.tf` (`aws_region`, `instance_type`, `key_name`, `admin_ssh_cidr`, `root_volume_gb`).
+
+**Nettoyage** :
+
+```bash
+cd infra/prod
+terraform destroy
+```
+
+### `registry/infra/` — optionnel (lab registre Docker)
+
+Second module Terraform pour une EC2 dediee registre (SSH, HTTP 80, TCP 5000). Detail : `registry/README.md`.
+
+### Prerequis
+
+- Terraform >= 1.5
+- Compte AWS + credentials configures (`aws configure` ou variables d’environnement) avec droits EC2 suffisants
