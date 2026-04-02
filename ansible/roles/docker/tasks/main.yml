@@ -1,0 +1,67 @@
+
+- name: Mettre à jour le cache apt
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Installer les paquets nécessaires via apt
+  become: true
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Créer le dossier /etc/apt/keyrings
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Télécharger la clé GPG officielle de Docker
+  become: true
+  ansible.builtin.shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+
+- name: Ajouter le dépôt officiel Docker
+  become: true
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ ansible_architecture | lower }} signed-by=/etc/apt/keyrings/docker.gpg]
+      https://download.docker.com/linux/ubuntu
+      {{ ansible_distribution_release }} stable
+    state: present
+
+- name: Mettre à jour le cache apt après ajout du dépôt
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Installer Docker Engine et les composants associés
+  become: true
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+
+- name: Démarrer et activer le service Docker au démarrage
+  become: true
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ajouter l'utilisateur ubuntu au groupe docker
+  become: true
+  ansible.builtin.user:
+    name: ubuntu
+    groups: docker
+    append: true
