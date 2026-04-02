@@ -1,0 +1,32 @@
+---
+- name: Déploiement application
+  hosts: web
+  become: true
+  vars:
+    ghcr_token: "{{ ghcr_token }}"
+    ghcr_user: "{{ ghcr_user }}"
+  roles:
+    - docker
+  tasks:
+    - name: Se connecter au registre GitHub Container Registry
+      community.docker.docker_login:
+        registry_url: ghcr.io
+        username: "{{ ghcr_user }}"
+        password: "{{ ghcr_token }}"
+
+    - name: Créer le répertoire de déploiement /app
+      ansible.builtin.file:
+        path: /app
+        state: directory
+        mode: "0755"
+
+    - name: Copier docker-compose vers le serveur
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../docker-compose.prod.yml"
+        dest: /app/docker-compose.yml
+
+    - name: Démarrer la stack Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /app
+        state: present
+        pull: always
