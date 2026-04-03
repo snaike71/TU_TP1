@@ -74,16 +74,31 @@ jobs:
           ansible-galaxy collection install -r ansible/requirements.yml
 
       - name: Lancer le playbook Ansible
+        env:
+          REGISTRY_HOST: ${{ secrets.REGISTRY_HOST }}
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DB: ${{ secrets.MYSQL_DB }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          SERVER_IP: ${{ env.SERVER_IP }}
         run: |
-          ansible-playbook -i infra/prod/inventory.ini ansible/playbook.yml \
-            --extra-vars "registry_host=${{ secrets.REGISTRY_HOST }} \
-                         registry_user=${{ secrets.REGISTRY_USER }} \
-                         registry_password=${{ secrets.REGISTRY_PASSWORD }} \
-                         server_ip=${{ env.SERVER_IP }} \
-                         mysql_root_password=${{ secrets.MYSQL_ROOT_PASSWORD }} \
-                         mysql_db=${{ secrets.MYSQL_DB }} \
-                         mysql_user=${{ secrets.MYSQL_USER }} \
-                         mysql_password=${{ secrets.MYSQL_PASSWORD }}"
+          python3 -c "
+          import os, json
+          d = {
+            'registry_host': os.environ['REGISTRY_HOST'],
+            'registry_user': os.environ['REGISTRY_USER'],
+            'registry_password': os.environ['REGISTRY_PASSWORD'],
+            'server_ip': os.environ['SERVER_IP'],
+            'mysql_root_password': os.environ['MYSQL_ROOT_PASSWORD'],
+            'mysql_db': os.environ['MYSQL_DB'],
+            'mysql_user': os.environ['MYSQL_USER'],
+            'mysql_password': os.environ['MYSQL_PASSWORD'],
+          }
+          open('/tmp/avars.json','w').write(json.dumps(d))
+          "
+          ansible-playbook -i infra/prod/inventory.ini ansible/playbook.yml --extra-vars "@/tmp/avars.json"
 
       - name: Attendre MySQL puis redémarrer l'API
         run: |
