@@ -12,10 +12,11 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -P 3306 -u root -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1' 2>/dev/null"]
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 30s
 
   api:
     image: ${REGISTRY_HOST}/api:latest
