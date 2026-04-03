@@ -79,8 +79,8 @@ resource "aws_security_group" "app" {
 
   ingress {
     description = "API FastAPI"
-    from_port   = 8001
-    to_port     = 8001
+    from_port   = 8000
+    to_port     = 8000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

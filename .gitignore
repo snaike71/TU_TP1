@@ -11,8 +11,9 @@ infra/prod/.terraform/
 infra/prod/*.tfstate
 infra/prod/*.tfstate.*
 infra/prod/*.pem
-aws/registry/terraform/.terraform/
-aws/registry/terraform/*.tfstate
-aws/registry/terraform/*.tfstate.*
-aws/registry/terraform/*.pem
-aws/registry/ansible/inventory.ini
+registry/terraform/.terraform/
+registry/terraform/*.tfstate
+registry/terraform/*.tfstate.*
+registry/terraform/*.pem
+registry/ansible/inventory.ini
+ansible/inventory.ini
