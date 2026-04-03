@@ -25,7 +25,7 @@ jobs:
 
       - name: Build & Push API
         run: |
-          docker build -t ${{ secrets.REGISTRY_HOST }}/api:latest -f server/Dockerfile .
+          docker build -t ${{ secrets.REGISTRY_HOST }}/api:latest server/
           docker push ${{ secrets.REGISTRY_HOST }}/api:latest
 
       - name: Build & Push Frontend
