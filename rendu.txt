@@ -1,9 +1,0 @@
-Repository GitHub : https://github.com/snaike71/TU_TP1
-
-IP publique — Registre Docker (HTTPS) : 15.188.14.11
-IP publique — Application              : 52.47.204.215  (recréée à chaque terraform apply)
-
-Accès registre Docker :
-  URL  : https://15.188.14.11
-  User : admin
-  Pass : admin123
