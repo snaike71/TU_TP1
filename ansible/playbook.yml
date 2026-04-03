@@ -2,17 +2,26 @@
 - name: Déploiement application
   hosts: web
   become: true
-  vars:
-    ghcr_token: "{{ ghcr_token }}"
-    ghcr_user: "{{ ghcr_user }}"
   roles:
     - docker
   tasks:
-    - name: Se connecter au registre GitHub Container Registry
+    - name: Configurer le daemon Docker pour le registre privé
+      ansible.builtin.copy:
+        content: |
+          {"insecure-registries": ["{{ registry_host }}"]}
+        dest: /etc/docker/daemon.json
+        mode: "0644"
+
+    - name: Redémarrer Docker pour appliquer la config
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted
+
+    - name: Se connecter au registre Docker AWS
       community.docker.docker_login:
-        registry_url: ghcr.io
-        username: "{{ ghcr_user }}"
-        password: "{{ ghcr_token }}"
+        registry_url: "https://{{ registry_host }}"
+        username: "{{ registry_user }}"
+        password: "{{ registry_password }}"
 
     - name: Créer le répertoire de déploiement /app
       ansible.builtin.file:
@@ -24,6 +33,18 @@
       ansible.builtin.copy:
         src: "{{ playbook_dir }}/../docker-compose.prod.yml"
         dest: /app/docker-compose.yml
+
+    - name: Créer le fichier .env pour docker-compose
+      ansible.builtin.copy:
+        content: |
+          REGISTRY_HOST={{ registry_host }}
+          MYSQL_ROOT_PASSWORD={{ mysql_root_password }}
+          MYSQL_DB={{ mysql_db }}
+          MYSQL_USER={{ mysql_user }}
+          MYSQL_PASSWORD={{ mysql_password }}
+          SERVER_IP={{ server_ip }}
+        dest: /app/.env
+        mode: "0600"
 
     - name: Démarrer la stack Docker Compose
       community.docker.docker_compose_v2:
