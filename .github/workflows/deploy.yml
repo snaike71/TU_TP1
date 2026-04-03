@@ -85,6 +85,11 @@ jobs:
                          mysql_user=${{ secrets.MYSQL_USER }} \
                          mysql_password=${{ secrets.MYSQL_PASSWORD }}"
 
+      - name: Diagnostic containers
+        run: |
+          ssh -i infra/prod/key.pem -o StrictHostKeyChecking=no ubuntu@${{ env.SERVER_IP }} \
+            "docker ps -a && echo '---LOGS API---' && docker logs app-api-1 2>&1 | tail -20 || docker logs \$(docker ps -aq -f name=api) 2>&1 | tail -20"
+
       - name: Validation post-déploiement
         run: |
           echo "Attente du démarrage des conteneurs..."
