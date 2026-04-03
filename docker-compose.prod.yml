@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: ghcr.io/${GHCR_USER}/${REPO_NAME}/mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  api:
+    image: ghcr.io/${GHCR_USER}/${REPO_NAME}/api:latest
+    depends_on:
+      - mysql
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    image: ghcr.io/${GHCR_USER}/${REPO_NAME}/frontend:latest
+    depends_on:
+      - api
+    environment:
+      VITE_API_URL: http://${SERVER_IP}:8000
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  adminer:
+    image: adminer
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge

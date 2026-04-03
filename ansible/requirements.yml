@@ -1,0 +1,8 @@
+# Déclare les collections Ansible Galaxy requises par ce projet (modules Docker, fichiers, etc.).
+# Installation : ansible-galaxy collection install -r ansible/requirements.yml
+---
+collections:
+  - name: community.docker
+    version: ">=3.0.0"
+  - name: ansible.posix
+    version: ">=1.0.0"
