@@ -12,7 +12,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u $$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DB -e 'SELECT 1 FROM utilisateur LIMIT 1' 2>/dev/null"]
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u $$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE -e 'SELECT 1 FROM utilisateur LIMIT 1' 2>/dev/null"]
       interval: 10s
       timeout: 5s
       retries: 15
