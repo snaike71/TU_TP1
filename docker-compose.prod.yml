@@ -11,10 +11,18 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   api:
     image: ${REGISTRY_HOST}/api:latest
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
       MYSQL_HOST: mysql
       MYSQL_DATABASE: ${MYSQL_DB}
@@ -27,11 +35,18 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8000/users > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   frontend:
     image: ${REGISTRY_HOST}/frontend:latest
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     environment:
       VITE_API_URL: http://${SERVER_IP}:8000
     ports:
@@ -43,7 +58,8 @@ services:
   adminer:
     image: adminer
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - app-network

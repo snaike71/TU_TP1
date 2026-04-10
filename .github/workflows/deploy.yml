@@ -100,15 +100,10 @@ jobs:
 
           ansible-playbook -i infra/prod/inventory.ini ansible/playbook.yml --extra-vars "@/tmp/avars.json"
 
-      - name: Wait MySQL then restart API
-        run: |
-          ssh -i infra/prod/key.pem -o StrictHostKeyChecking=no ubuntu@${{ env.SERVER_IP }} \
-            "echo 'Attente MySQL...' && sleep 20 && docker restart app-api-1"
-
       - name: Validation post-déploiement
         run: |
-          echo "Attente du démarrage..."
-          sleep 60
+          echo "Attente du démarrage de la stack (MySQL healthcheck + API)..."
+          sleep 90
 
           echo "Test Frontend..."
           curl -f --retry 10 --retry-delay 10 http://${{ env.SERVER_IP }} || exit 1
